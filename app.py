@@ -795,30 +795,7 @@ def cart():
 
     finally:
         cur.close()
-
-    try:
-        # Get cart items
-        cur.execute("""
-            SELECT c.id, c.product_id, c.quantity, p.name, p.price, p.image_url, p.description
-            FROM cart c
-            JOIN products p ON c.product_id = p.id
-            WHERE c.user_id = %s
-        """, (user_id,))
-        cart_items = cur.fetchall()
-
-        # Calculate total
-        total = sum(item[2] * item[4] for item in cart_items)
-
-        return render_template('checkout.html', cart_items=cart_items, total=total)
-
-    except Exception as e:
-        print(f"Error in checkout: {str(e)}")
-        flash('An error occurred while processing your checkout.')
-        return redirect(url_for('cart'))
-
-    finally:
-        cur.close()
-
+              
 @app.route('/place_order', methods=['POST'])
 def place_order():
     if 'user_id' not in session:
