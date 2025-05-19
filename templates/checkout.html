@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row">
+    <!-- Order Summary -->
+    <div class="col-lg-8 mb-4">
+      <div class="card shadow">
+        <div class="card-body">
+          <h3 class="card-title mb-4">Order Summary</h3>
+          
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th>Product</th>
+                  <th>Price</th>
+                  <th>Quantity</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in cart_items %}
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <img src="{{ item[5] }}" alt="{{ item[3] }}" class="checkout-product-img me-3">
+                      <div>
+                        <h6 class="mb-0">{{ item[3] }}</h6>
+                        <small class="text-muted">₹{{ "%.2f"|format(item[4]) }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>₹{{ "%.2f"|format(item[4]) }}</td>
+                  <td>{{ item[2] }}</td>
+                  <td>₹{{ "%.2f"|format(item[4] * item[2]) }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="3" class="text-end"><strong>Total Amount:</strong></td>
+                  <td><strong>₹{{ "%.2f"|format(total) }}</strong></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shipping Information -->
+      <div class="card shadow">
+        <div class="card-body">
+          <h3 class="card-title mb-4">Shipping Information</h3>
+          
+          <form action="{{ url_for('place_order') }}" method="POST" id="checkoutForm">
+            <div class="mb-3">
+              <label class="form-label">Full Name</label>
+              <input type="text" name="full_name" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Phone Number</label>
+              <input type="tel" name="phone" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Email Address</label>
+              <input type="email" name="email" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Shipping Address</label>
+              <textarea name="shipping_address" class="form-control" rows="3" required></textarea>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">City</label>
+                <input type="text" name="city" class="form-control" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">State</label>
+                <input type="text" name="state" class="form-control" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">ZIP Code</label>
+                <input type="text" name="zip_code" class="form-control" required>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Payment Method</label>
+              <select name="payment_method" class="form-select" required>
+                <option value="">Select Payment Method</option>
+                <option value="cash_on_delivery">Cash on Delivery</option>
+                <option value="credit_card">Credit Card</option>
+                <option value="debit_card">Debit Card</option>
+                <option value="net_banking">Net Banking</option>
+                <option value="upi">UPI</option>
+              </select>
+            </div>
+
+            <div class="mb-4">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="terms" id="terms" required>
+                <label class="form-check-label" for="terms">
+                  I agree to the terms and conditions
+                </label>
+              </div>
+            </div>
+
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-shopping-cart me-2"></i>Place Order
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="col-lg-4 mb-4">
+      <div class="card shadow">
+        <div class="card-body">
+          <h3 class="card-title mb-4">Order Summary</h3>
+          
+          <div class="mb-4">
+            <div class="d-flex justify-content-between">
+              <span>Subtotal</span>
+              <span>₹{{ "%.2f"|format(total) }}</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span>Shipping</span>
+              <span>Free</span>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between">
+              <h5>Total</h5>
+              <h5>₹{{ "%.2f"|format(total) }}</h5>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <h5>Payment Methods</h5>
+            <div class="d-flex gap-2">
+              <img src="{{ url_for('static', filename='images/payment/cod.png') }}" alt="COD" class="payment-icon">
+              <img src="{{ url_for('static', filename='images/payment/credit.png') }}" alt="Credit Card" class="payment-icon">
+              <img src="{{ url_for('static', filename='images/payment/debit.png') }}" alt="Debit Card" class="payment-icon">
+              <img src="{{ url_for('static', filename='images/payment/upi.png') }}" alt="UPI" class="payment-icon">
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <h5>Delivery</h5>
+            <p class="text-muted">
+              Estimated delivery within 5-7 business days<br>
+              Orders placed before 2 PM will be processed same day
+            </p>
+          </div>
+
+          <div>
+            <h5>Need Help?</h5>
+            <p class="text-muted">
+              Contact our customer support team at <a href="tel:+911234567890">+91 1234567890</a><br>
+              or email us at <a href="mailto:support@yourstore.com">support@yourstore.com</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .checkout-product-img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+  .payment-icon {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+  }
+  .card {
+    border: none;
+    border-radius: 10px;
+  }
+  .card:hover {
+    transform: translateY(-5px);
+    transition: transform 0.3s ease;
+  }
+</style>
+
+<script>
+  document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (!confirm('Are you sure you want to place this order?')) {
+      return;
+    }
+
+    this.submit();
+  });
+</script>
+{% endblock %}

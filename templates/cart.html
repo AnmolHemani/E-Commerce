@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Your Cart{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row">
+    <div class="col-12">
+      <h2 class="mb-4">Your Shopping Cart</h2>
+      
+      {% if cart_items %}
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>Product</th>
+              <th>Price</th>
+              <th>Quantity</th>
+              <th>Subtotal</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in cart_items %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center">
+                  <img src="{{ item[4] }}" alt="{{ item[1] }}" class="cart-product-img me-3">
+                  <div>
+                    <h5 class="mb-0">{{ item[1] }}</h5>
+                    <small class="text-muted">{{ item[6] }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>$ {{ "%.2f"|format(item[2]) }}</td>
+              <td>
+                <div class="input-group quantity-controls">
+                  <button class="btn btn-outline-secondary" onclick='updateQuantity("{{ item[0] }}", -1, "{{ item[3] }}")'>
+                    <i class="fas fa-minus"></i>
+                  </button>
+                  <input type="number" class="form-control text-center" value="{{ item[3] }}" min="1" 
+                         onchange='updateQuantity("{{ item[0] }}", parseInt(this.value) - "{{ item[3] }}", "{{ item[3] }}")'>
+                  <button class="btn btn-outline-secondary" onclick='updateQuantity("{{ item[0] }}", 1, "{{ item[3] }}")'>
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+              </td>
+              <td>$ {{ "%.2f"|format(item[2] * item[3]) }}</td>
+              <td>
+                <button class="btn btn-danger btn-sm" onclick='removeFromCart("{{ item[0] }}")'>
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="row mt-5">
+        <div class="col-md-6">
+          <a href="{{ url_for('home') }}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-2"></i>Continue Shopping
+          </a>
+        </div>
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Order Summary</h5>
+              <hr>
+              <div class="d-flex justify-content-between mb-3">
+                <span>Subtotal</span>
+                <span>$ {{ "%.2f"|format(total) }}</span>
+              </div>
+              <div class="d-flex justify-content-between mb-3">
+                <span>Shipping</span>
+                <span>Free</span>
+              </div>
+              <hr>
+              <div class="d-flex justify-content-between mb-3">
+                <span>Total</span>
+                <span class="h4">$ {{ "%.2f"|format(total) }}</span>
+              </div>
+              <button class="btn btn-success w-100" onclick="checkout()">
+                <i class="fas fa-shopping-cart me-2"></i>Proceed to Checkout
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style>
+        .cart-product-img {
+          width: 50px;
+          height: 50px;
+          object-fit: cover;
+        }
+        .quantity-controls {
+          max-width: 150px;
+        }
+        .quantity-controls input {
+          width: 70px;
+        }
+      </style>
+
+      <script>
+        function updateQuantity(cartId, change, currentQuantity) {
+          const newQuantity = currentQuantity + change;
+          if (newQuantity < 1) {
+            return;
+          }
+          
+          fetch(`/update_cart/${cartId}/${change}`, {
+            method: 'POST',
+            credentials: 'same-origin'
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              location.reload();
+            } else {
+              alert(data.message || 'Failed to update quantity');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred');
+          });
+        }
+
+        function removeFromCart(cartId) {
+          if (confirm('Are you sure you want to remove this item?')) {
+            fetch(`/remove_from_cart/${cartId}`, {
+              method: 'POST',
+              credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                location.reload();
+              } else {
+                alert(data.message || 'Failed to remove item');
+              }
+            })
+            .catch(error => {
+              console.error('Error:', error);
+              alert('An error occurred');
+            });
+          }
+        }
+
+        function checkout() {
+          if (confirm('Proceed to checkout?')) {
+            window.location.href = '{{ url_for("checkout") }}';
+          }
+        }
+      </script>
+      
+      {% else %}
+      <div class="text-center py-5">
+        <i class="fas fa-shopping-cart display-1 text-muted mb-3"></i>
+        <h3>Your cart is empty</h3>
+        <p class="text-muted">Add some items to your cart to continue.</p>
+        <a href="{{ url_for('home') }}" class="btn btn-primary">
+          <i class="fas fa-arrow-left me-2"></i>Continue Shopping
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

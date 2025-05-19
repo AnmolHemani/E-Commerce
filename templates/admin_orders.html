@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Orders{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="m-0">Orders</h3>
+    <div class="d-flex gap-2">
+      <select class="form-select" id="statusFilter">
+        <option value="">All Statuses</option>
+        {% for status in statuses %}
+        <option value="{{ status }}">{{ status.title() }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <table class="table table-striped align-middle shadow-sm">
+    <thead class="table-dark">
+      <tr>
+        <th>Order ID</th>
+        <th>Customer</th>
+        <th>Items</th>
+        <th>Total Amount</th>
+        <th>Status</th>
+        <th>Payment Status</th>
+        <th>Created At</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <td>{{ order[0] }}</td>
+        <td>{{ order[1] }}</td>
+        <td>{{ order[6] }}</td>
+        <td>₹{{ order[2] }}</td>
+        <td>{{ order[3] }}</td>
+        <td>{{ order[4] }}</td>
+        <td>{{ order[5] }}</td>
+        <td>
+          <div class="btn-group">
+            <a href="{{ url_for('order_details', order_id=order[0]) }}" class="btn btn-sm btn-info">View</a>
+            {% if order[3] == 'pending' %}
+            <a href="{{ url_for('update_order_status', order_id=order[0]) }}" class="btn btn-sm btn-primary">Update Status</a>
+            {% endif %}
+            {% if order[3] != 'cancelled' %}
+            <button onclick="cancelOrder(' + order[0] + ')" class="btn btn-sm btn-danger">Cancel</button>
+            {% endif %}
+            {% if order[4] == 'completed' and order[3] != 'cancelled' %}
+            <button onclick="refundOrder(' + order[0] + ')" class="btn btn-sm btn-warning">Refund</button>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Status filter functionality
+    document.getElementById('statusFilter').addEventListener('change', function() {
+        const status = this.value;
+        const rows = document.getElementsByTagName('tr');
+        
+        for (let row of rows) {
+            if (row.cells.length > 0) {
+                const orderStatus = row.cells[4].textContent.toLowerCase();
+                if (status === '' || orderStatus === status) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        }
+    });
+
+    // Order cancellation functionality
+    function cancelOrder(orderId) {
+        if (confirm('Are you sure you want to cancel this order?')) {
+            orderId = parseInt(orderId); // Convert to number if it's a string
+            fetch(`/admin/orders/${orderId}/cancel`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Failed to cancel order: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while processing your request: ' + (error.message || 'Unknown error'));
+            });
+        }
+    }
+
+    function refundOrder(orderId) {
+        if (confirm('Are you sure you want to refund this order?')) {
+            orderId = parseInt(orderId); // Convert to number if it's a string
+            fetch(`/admin/orders/${orderId}/refund`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Failed to process refund: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while processing your request: ' + (error.message || 'Unknown error'));
+            });
+        }
+    }
+});
+</script>
+{% endblock %}

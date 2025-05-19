@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+{% block title %}Admin Analytics{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-5">
+  <div class="row">
+    <!-- Overview Cards -->
+    {# ------------------------------------------------------------ #}
+    {# Keep indexes consistent:                                #}
+    {# order_stats = [total, pending, processing, shipped, delivered, cancelled] #}
+    {# payment_stats = [total, pending, completed, failed]      #}
+    {# ------------------------------------------------------------ #}
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-primary shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Sales</div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">₹{{ total_sales | round(2) }}</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-success shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Orders</div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ order_stats[0] }}</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-info shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Completed Payments</div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ payment_stats[2] }}</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-credit-card fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-warning shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending Orders</div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ order_stats[1] }}</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-clock fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order & Payment Statistics Charts -->
+  <div class="row">
+    <!-- Order Statistics -->
+    <div class="col-xl-6 col-lg-12">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex align-items-center justify-content-between">
+          <h6 class="m-0 font-weight-bold text-primary">Order Statistics</h6>
+        </div>
+        <div class="card-body">
+          <canvas id="orderStatusChart" height="260"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Statistics -->
+    <div class="col-xl-6 col-lg-12">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex align-items-center justify-content-between">
+          <h6 class="m-0 font-weight-bold text-primary">Payment Statistics</h6>
+        </div>
+        <div class="card-body">
+          <canvas id="paymentStatusChart" height="260"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Timeline -->
+  <div class="row">
+    <div class="col-xl-12">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex align-items-center justify-content-between">
+          <h6 class="m-0 font-weight-bold text-primary">Order Timeline (Last 30 Days)</h6>
+        </div>
+        <div class="card-body">
+          <canvas id="orderTimelineChart" height="320"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Selling Products -->
+  <div class="row">
+    <div class="col-xl-12">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex align-items-center justify-content-between">
+          <h6 class="m-0 font-weight-bold text-primary">Top Selling Products</h6>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-bordered">
+              <thead class="thead-light">
+                <tr>
+                  <th>Product</th>
+                  <th class="text-right">Units Sold</th>
+                  <th class="text-right">Revenue (₹)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for product, units, revenue in top_products %}
+                <tr>
+                  <td>{{ product }}</td>
+                  <td class="text-right">{{ units }}</td>
+                  <td class="text-right">{{ revenue | round(2) }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // ---------- Order Status Doughnut ----------
+    const orderStatusCtx = document.getElementById('orderStatusChart');
+    if (orderStatusCtx) {
+      const orderStatusCtx2d = orderStatusCtx.getContext('2d');
+      const orderStatusData = {
+        labels: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'],
+        datasets: [{
+          data: JSON.parse('{{ order_stats | safe }}'),
+          backgroundColor: ['#f6c23e', '#36b9cc', '#4e73df', '#1cc88a', '#e74a3b'],
+          borderWidth: 1
+        }]
+      };
+
+      new Chart(orderStatusCtx2d, {
+        type: 'doughnut',
+        data: orderStatusData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
+      });
+    }
+
+    // ---------- Payment Status Doughnut ----------
+    const paymentStatusCtx = document.getElementById('paymentStatusChart');
+    if (paymentStatusCtx) {
+      const paymentStatusCtx2d = paymentStatusCtx.getContext('2d');
+      const paymentStatusData = {
+        labels: ['Pending', 'Completed', 'Failed'],
+        datasets: [{
+          data: JSON.parse('{{ payment_stats | safe }}'),
+          backgroundColor: ['#f6c23e', '#1cc88a', '#e74a3b'],
+          borderWidth: 1
+        }]
+      };
+
+      new Chart(paymentStatusCtx2d, {
+        type: 'doughnut',
+        data: paymentStatusData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
+      });
+    }
+
+    // ---------- Order Timeline Line ----------
+    const orderTimelineCtx = document.getElementById('orderTimelineChart');
+    if (orderTimelineCtx) {
+      const orderTimelineCtx2d = orderTimelineCtx.getContext('2d');
+      const dates = JSON.parse("{{ order_timeline | map(attribute=0) | map('strftime', '%Y-%m-%d') | list | tojson | safe }}");
+      const values = JSON.parse("{{ order_timeline | map(attribute=1) | list | tojson | safe }}");
+
+      const orderTimelineData = {
+        labels: dates,
+        datasets: [{
+          label: 'Orders',
+          data: values,
+          borderColor: '#4e73df',
+          tension: 0.3,
+          fill: false
+        }]
+      };
+
+      new Chart(orderTimelineCtx2d, {
+        type: 'line',
+        data: orderTimelineData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

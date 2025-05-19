@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4">Welcome, {{ admin }}!</h2>
+
+  <div class="row g-3">
+    <!-- Main Cards -->
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">Manage Products</h5>
+          <p class="card-text small text-muted">View and manage products.</p>
+          <a href="{{ url_for('admin_products') }}" class="btn btn-primary mt-3">Go to Products</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">Manage Carts</h5>
+          <p class="card-text small text-muted">View and manage user carts.</p>
+          <a href="{{ url_for('admin_carts') }}" class="btn btn-primary mt-3">Go to Carts</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">Manage Orders</h5>
+          <p class="card-text small text-muted">View and manage orders.</p>
+          <a href="{{ url_for('admin_orders') }}" class="btn btn-primary mt-3">Go to Orders</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">Statistics</h5>
+          <div class="row">
+            <div class="col-6">
+              <div class="stat-box">
+                <h6>Total Users</h6>
+                <h3>{{ total_users }}</h3>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="stat-box">
+                <h6>Total Products</h6>
+                <h3>{{ total_products }}</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Orders Statistics -->
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">Order Statistics</h5>
+          <div class="row">
+            <div class="col-6">
+              <div class="stat-box">
+                <h6>Total Orders</h6>
+                <h3>{{ total_orders }}</h3>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="stat-box">
+                <h6>Pending Orders</h6>
+                <h3>{{ pending_orders }}</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
